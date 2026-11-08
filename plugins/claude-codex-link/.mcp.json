@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "claude-ask": {
+    "claude-codex-link": {
       "cwd": ".",
       "command": "node",
       "args": [

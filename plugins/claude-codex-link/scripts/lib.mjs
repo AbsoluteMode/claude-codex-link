@@ -14,7 +14,7 @@ import {
 import { tmpdir } from "node:os";
 import { isAbsolute, join } from "node:path";
 
-export const DEFAULT_MODEL = "claude-opus-5";
+export const DEFAULT_MODEL = "claude-opus-5-5";
 export const DEFAULT_EFFORT = "high";
 export const MODEL_PATTERN =
   /^(?:sonnet|opus|fable|haiku|opusplan|claude-[a-z0-9][a-z0-9._-]*)(?:\[1m\])?$/;

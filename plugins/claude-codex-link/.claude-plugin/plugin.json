@@ -1,0 +1,17 @@
+{
+  "name": "codex-claude-link",
+  "version": "0.4.0",
+  "description": "Consult Claude and exchange addressed messages with Claude Code and Codex sessions.",
+  "author": {
+    "name": "max"
+  },
+  "license": "MIT",
+  "mcpServers": {
+    "claude-codex-link": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/scripts/server.mjs"
+      ]
+    }
+  }
+}

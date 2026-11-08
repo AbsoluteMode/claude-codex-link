@@ -1,92 +1,141 @@
-# Claude Ask
+# Claude/Codex Link
 
-Claude Ask is an open-source Codex plugin that runs a locally authenticated
-Claude Code model as an independent second opinion or full autonomous coding
-agent.
+Connect existing Claude Code and Codex sessions, and run persistent Claude
+consultations. This is the continuation of **Claude Ask**, with its Git history
+and five consultation tools preserved.
 
-It provides five persistent asynchronous MCP tools:
+**Delivery is asymmetric:** Claude receives messages in its live session.
+Codex receives a persistent queued message on a subsequent turn. Version 0.4.0
+does **not** wake an idle Codex Desktop chat from an external process. A request
+for live Codex delivery fails explicitly instead of silently queueing.
 
-- `ask` starts an advisory, read-only review, or workspace-agent job;
-- `ask_followup` resumes a completed Claude session and forks a new branch;
-- `ask_status` waits for progress or returns the final result;
-- `list_jobs` lists recent jobs and recovers lost IDs;
-- `cancel_ask` explicitly cancels a job and its process tree.
+## Install
 
-Jobs support a human-readable name, `low | medium | high | xhigh | max` effort
-(`high` by default), and an optional `max_budget_usd` ceiling.
+Requirements: Node.js 22+, locally authenticated Claude Code (2.1.300 tested),
+and Codex CLI (0.159.2 tested). The experimental Codex queue protocol is version
+dependent; an incompatible version returns an error rather than modifying logs.
 
-## Install in Codex
+In Codex:
 
-Add this Git repository as a marketplace and install the plugin:
-
-```bash
-codex plugin marketplace add AbsoluteMode/claude-ask
-codex plugin add claude-ask@absolutmode
+```sh
+codex plugin marketplace add AbsoluteMode/claude-codex-link
+codex plugin add claude-codex-link@absolutmode
 ```
 
-Start a new Codex task after installing or updating so the skill and MCP tool
-schemas are reloaded.
+In Claude Code:
 
-## Requirements
+```sh
+claude plugin marketplace add AbsoluteMode/claude-codex-link
+claude plugin install codex-claude-link@absolutmode
+```
 
-- Codex with plugin support;
-- Node.js 22 or newer;
-- Claude Code on `PATH` or at `~/.local/bin/claude`;
-- an authenticated Claude Code session.
+Claude reserves third-party plugin IDs starting with `claude-`, so its install
+ID is `codex-claude-link`; the product and repository name remain Claude/Codex Link.
 
-## Access modes
+Reload plugins or start a new session to discover the new tool schemas. Finish
+old Claude Ask jobs before disabling the old plugin. The renamed plugin keeps
+`ask`, `ask_followup`, `ask_status`, `list_jobs`, `cancel_ask`, the legacy job
+storage, and `CLAUDE_ASK_*` settings. Installation does not remove the old plugin.
 
-Use a model alias or a full model ID such as `claude-sonnet-5-5`. The default
-is `claude-opus-5`, matching the existing personal installation.
+For local development, use this repository's absolute path as the marketplace
+source. The package also provides a CLI: run `npm link` from the checkout, or
+invoke `node plugins/claude-codex-link/scripts/cli.mjs` directly.
 
-With an absolute `workspace`, full `mode: "agent"` is the default for repository
-assistance, including implementation, investigation, and code reviews. Claude can
-run shell commands, inspect Git, edit files, and run tests. It inherits normal
-user/project instructions, hooks, network access, and configured MCP servers,
-skills, and plugins. Interactive permission prompts are bypassed because a
-detached job cannot answer them.
+## Existing-session tools
 
-Without `workspace`, advisory mode receives only the question and has no tools.
+| Tool | Purpose |
+| --- | --- |
+| `link_sessions` | Discover live Claude sessions or saved Codex chats |
+| `link_read` | Read persisted text without resuming or starting a session |
+| `link_send` | Start a durable addressed send; returns a message UUID |
+| `link_status` | Inspect transport acceptance and recipient confirmation |
+| `link_inbox` | Read messages addressed to a specific session |
+| `link_ack` | Confirm that the addressed recipient read a message |
 
-`mode: "review"` is an optional restriction for an explicit read-only request.
-It exposes only Read, Glob, and Grep and disables shell, file writes,
-customizations, and MCP servers. It cannot run Git or tests. Follow-ups preserve
-the selected mode.
+Discover the exact address first (`claude:<UUID>` or `codex:<UUID>`). Titles are
+labels; never guess a recipient from a partial name. Claude's current name must
+be unique and stable during delivery because its native SendMessage resolves
+that name. Only send when the human has authorized the exchange.
 
-The workspace is Claude's working directory and intended task scope, not a
-hard operating-system sandbox. Only pass trusted workspaces and prompts.
+```sh
+claude-codex-link sessions --provider claude
+claude-codex-link sessions --provider codex
+```
 
-## Reliability and privacy
+For a send, use the actual discovered sender/recipient UUIDs. Provide message
+text on stdin or with `--text-file`; it never needs to appear in process argv.
+MCP callers use `link_send` with `from`, `to`, and `text`. Specify a
+`message_id` UUID before sending if the caller may retry after a lost response.
+Reusing that ID and the identical payload returns the existing receipt; it never
+restarts delivery. After `failed`, correct the cause and explicitly choose a new
+ID. Failed and unfinished sends are not exposed as inbox mail.
 
-- Prompts travel over stdin, never argv, environment variables, state, or logs.
-- Job directories use mode `0700`; private files use mode `0600`.
-- Jobs survive MCP server restarts and remain discoverable through `list_jobs`.
-- Boot-aware recovery avoids trusting reused PIDs after a machine restart.
-- Cancellation terminates Claude's POSIX process group with
-  `SIGTERM → SIGKILL`.
-- Stderr is capped at 1 MiB; failures expose at most a 4 KiB diagnostic tail.
-- There is no automatic elapsed-time or idle-time cancellation.
-- Completed plugin job data is retained for 24 hours by default; resumable
-  Claude sessions use Claude Code's normal session storage.
+`reply_to` defaults to the sender. A reply is a new message with `in_reply_to`
+set to the original message UUID. The recipient calls `link_ack` after reading;
+it must not reply automatically to receipts.
 
-See [the plugin documentation](plugins/claude-ask/README.md) for the complete
-protocol and configuration reference.
+## Receipts and limits
+
+- `pending` / `sending`: detached delivery is in progress.
+- `accepted`: Claude's inbox accepted the message; reading is unconfirmed.
+- `queued`: Codex persisted the message; execution and reading are unconfirmed.
+- `acknowledged`: the addressed recipient reported reading it; work may remain.
+- `failed`: a known pre-delivery rejection.
+- `unknown`: delivery may have occurred, but its receipt was lost. Inspect the
+  recipient before sending again; the bridge never automatically resends.
+
+An acknowledgement is an agent-reported receipt, not cryptographic identity
+proof. Peer text is marked as agent-authored and carries no new human authority.
+Receiving-session permissions and inbound-message rules still apply.
+
+The bridge never edits transcript or queue databases directly, and never starts
+a second process on an open conversation to force a response. Archived Codex
+targets and ambiguous Claude names are rejected. Claude history contains the
+latest saved user/assistant text, excluding tool output and thinking. Codex
+history supports cursors. Separate app-server runtime status is not Desktop
+activity status.
+
+## Consultations
+
+`ask` returns a persistent job ID. Poll `ask_status` to completion. Workspace
+jobs default to full agent mode, with shell, edits, tests, MCP servers, skills,
+and plugins. Use `mode: review` only for an explicitly requested read-only
+restriction. Without workspace, advisory mode has no tools.
+
+The default is **claude-opus-5-5**, high effort. Check `resolved_model` in results.
+`ask_followup` forks a completed consultation's context; it does not message an
+already open session. Jobs have no elapsed-time or idle timeout and survive MCP
+restarts. See [consultation details](plugins/claude-codex-link/README.md).
+
+## Privacy and configuration
+
+Messages and receipts are stored locally in the `.claude-codex-link` directory in the user home, with 0700
+directories and 0600 files, until the owner removes them. They are not committed
+or uploaded by the plugin. Normal provider processing still applies when an
+agent receives a message. Consultations retain their original private job store
+and 24-hour completed-job retention.
+
+- `CLAUDE_CODEX_LINK_DIR`: message/receipt directory.
+- `CLAUDE_CODEX_LINK_CLAUDE_CLI`: Claude executable override.
+- `CLAUDE_CODEX_LINK_CODEX_CLI`: Codex executable override.
+- Existing `CLAUDE_ASK_*` settings continue to configure consultations.
+
+The Claude courier runs Opus 5.5 with only SendMessage, safe mode, and no MCP
+servers. Each live send invokes a short Claude turn. A local mailbox and explicit
+receipt avoid confusing model output with confirmed transport delivery.
 
 ## Development
 
-```bash
-npm test
+```sh
 npm run check
+npm test
 ```
 
-The default suite uses a fake Claude executable and consumes no model usage.
-It checks exact model IDs, low effort, read-only review, inherited restrictions,
-and job recovery after an MCP server restart.
-An authenticated paid/limited-usage smoke test is explicit:
+Default tests use fake executables and consume no model usage. They cover
+consultation recovery, exact model selection, message idempotency, receipt loss,
+wrong-recipient acknowledgements, ambiguous names, and archived targets.
 
-```bash
-npm run test:live
-```
+Canonical implementation notes: [.project-docs/project.md](.project-docs/project.md).
 
 ## License
 

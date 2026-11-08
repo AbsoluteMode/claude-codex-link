@@ -1,0 +1,35 @@
+{
+  "name": "claude-codex-link",
+  "version": "0.4.0",
+  "description": "Persistent Claude consultations and addressed messages between Claude Code and Codex sessions.",
+  "author": {
+    "name": "max"
+  },
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "sonnet",
+    "fable",
+    "opus",
+    "coding-agent"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Claude/Codex Link",
+    "shortDescription": "Consult Claude and connect existing Claude/Codex sessions.",
+    "longDescription": "Persistent Claude consultations and addressed messages between Claude Code and Codex sessions.",
+    "developerName": "max",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Interactive"
+    ],
+    "defaultPrompt": [
+      "Ask Opus for a quick independent opinion without repository tools.",
+      "Ask Claude to investigate and fix this issue, then run the tests.",
+      "Send a message to the selected Claude or Codex session."
+    ]
+  }
+}

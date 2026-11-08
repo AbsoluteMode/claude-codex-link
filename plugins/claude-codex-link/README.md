@@ -1,8 +1,8 @@
-# Claude Ask
+# Claude/Codex Link — consultations
 
-A personal Codex plugin that exposes locally authenticated Claude Code models as persistent asynchronous MCP jobs.
+The consultation module that exposes locally authenticated Claude Code models as persistent asynchronous MCP jobs.
 
-`claude-opus-5` with `high` effort is the default, preserving the existing personal installation. Model aliases and full model IDs such as `claude-sonnet-5-5` are accepted. Each job can select `low`, `medium`, `high`, `xhigh`, or `max` effort, set a human-readable name, and enforce a `max_budget_usd` ceiling.
+`claude-opus-5-5` with `high` effort is the default, preserving the existing personal installation. Model aliases and full model IDs such as `claude-sonnet-5-5` are accepted. Each job can select `low`, `medium`, `high`, `xhigh`, or `max` effort, set a human-readable name, and enforce a `max_budget_usd` ceiling.
 
 ## Tools
 
@@ -62,7 +62,7 @@ Job directories use mode 0700; state, result, stream, stderr, and cancellation f
 
 ## Requirements and tests
 
-- Claude Code on `PATH` or at `~/.local/bin/claude`; alternatively set `CLAUDE_ASK_CLI`.
+- Claude Code on `PATH` or at the `.local/bin/claude` executable in the user home; alternatively set `CLAUDE_ASK_CLI`.
 - A working Claude Code login (`claude auth status`).
 
 Run the no-usage test suite:
@@ -93,3 +93,7 @@ restart, and a follow-up that recalls the earlier context. Set
 On a live-test failure, diagnostics and running jobs are retained for recovery.
 
 Optional controls are `CLAUDE_ASK_JOB_DIR`, `CLAUDE_ASK_MAX_CONCURRENT_JOBS`, `CLAUDE_ASK_MAX_OUTPUT_BYTES`, and `CLAUDE_ASK_COMPLETED_RETENTION_MS`. None sets a wall-clock or idle deadline.
+
+Session messaging and host installation are documented in the [repository README](../../README.md).
+
+Install in Claude Code with `claude plugin install codex-claude-link --marketplace AbsoluteMode/claude-codex-link`.
