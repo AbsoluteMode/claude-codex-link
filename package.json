@@ -1,16 +1,19 @@
 {
-  "name": "claude-ask-marketplace",
-  "version": "0.3.1",
+  "name": "claude-codex-link",
+  "version": "0.4.0",
   "private": true,
-  "description": "Codex marketplace for the Claude Ask plugin.",
+  "description": "Bidirectional Claude Code / Codex session link with persistent consultations.",
   "type": "module",
   "scripts": {
-    "test": "node plugins/claude-ask/scripts/test-server.mjs",
-    "test:live": "CLAUDE_ASK_LIVE=1 node plugins/claude-ask/scripts/test-server.mjs",
-    "check": "node --check plugins/claude-ask/scripts/lib.mjs && node --check plugins/claude-ask/scripts/server.mjs && node --check plugins/claude-ask/scripts/job-runner.mjs && node --check plugins/claude-ask/scripts/fixtures/fake-claude.mjs && node --check plugins/claude-ask/scripts/test-server.mjs"
+    "test": "node plugins/claude-codex-link/scripts/test-server.mjs && node --test plugins/claude-codex-link/scripts/test-link.mjs",
+    "test:live": "CLAUDE_ASK_LIVE=1 node plugins/claude-codex-link/scripts/test-server.mjs",
+    "check": "node scripts/check.mjs"
   },
   "engines": {
     "node": ">=22"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "bin": {
+    "claude-codex-link": "plugins/claude-codex-link/scripts/cli.mjs"
+  }
 }

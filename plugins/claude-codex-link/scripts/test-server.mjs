@@ -88,7 +88,7 @@ class McpClient {
     const initialized = await this.request("initialize", {
       protocolVersion: "2025-03-26",
     });
-    assert.equal(initialized.result.serverInfo.name, "claude-ask");
+    assert.equal(initialized.result.serverInfo.name, "claude-codex-link");
     this.server.stdin.write(
       `${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`,
     );
@@ -172,7 +172,7 @@ async function fakeTests() {
     "claude-sonnet-5",
   );
   const skill = readFileSync(
-    join(pluginRoot, "skills", "claude-ask", "SKILL.md"),
+    join(pluginRoot, "skills", "claude-codex-link", "SKILL.md"),
     "utf8",
   );
   assert.ok(skill.trim().split(/\s+/).length < 500);
@@ -190,7 +190,7 @@ async function fakeTests() {
   const manifest = JSON.parse(
     readFileSync(join(pluginRoot, ".codex-plugin", "plugin.json"), "utf8"),
   );
-  assert.equal(manifest.version, "0.3.1");
+  assert.equal(manifest.version, "0.4.0");
   assert.ok(
     manifest.interface.defaultPrompt.some((prompt) =>
       /without repository tools/i.test(prompt),
@@ -211,7 +211,7 @@ async function fakeTests() {
   const listed = await client.request("tools/list");
   assert.deepEqual(
     listed.result.tools.map((tool) => tool.name),
-    ["ask", "ask_followup", "ask_status", "list_jobs", "cancel_ask"],
+    ["ask", "ask_followup", "ask_status", "list_jobs", "cancel_ask", "link_sessions", "link_read", "link_send", "link_status", "link_inbox", "link_ack"],
   );
   assert.match(listed.result.tools[0].description, /no elapsed-time/i);
   assert.match(listed.result.tools[0].description, /full autonomous coding agent/i);
@@ -233,7 +233,7 @@ async function fakeTests() {
   );
   assert.equal(
     listed.result.tools[0].inputSchema.properties.model.default,
-    "claude-opus-5",
+    "claude-opus-5-5",
   );
 
   const relativeWorkspace = await client.call("ask", {
@@ -256,7 +256,7 @@ async function fakeTests() {
   assert.equal(workspaceResult.result.content[0].text, "WORKSPACE_OK");
   assert.equal(
     workspaceResult.result.structuredContent.requested_model,
-    "claude-opus-5",
+    "claude-opus-5-5",
   );
   assert.equal(
     workspaceResult.result.structuredContent.requested_effort,
@@ -265,7 +265,7 @@ async function fakeTests() {
   assert.equal(workspaceResult.result.structuredContent.effort, "high");
   assert.equal(
     workspaceResult.result.structuredContent.resolved_model,
-    "claude-claude-opus-5-fake",
+    "claude-claude-opus-5-5-fake",
   );
   assert.equal(workspaceResult.result.structuredContent.workspace, workspaceRoot);
   assert.equal(workspaceResult.result.structuredContent.mode, "agent");

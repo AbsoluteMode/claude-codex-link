@@ -1,0 +1,14 @@
+{
+  "name": "absolutmode",
+  "owner": {
+    "name": "AbsoluteMode"
+  },
+  "plugins": [
+    {
+      "name": "codex-claude-link",
+      "source": "./plugins/claude-codex-link",
+      "description": "Consultations and bidirectional addressed session messages."
+    }
+  ],
+  "description": "Independent tools connecting Claude Code and Codex sessions."
+}
