@@ -4,7 +4,26 @@ import { createInterface } from 'node:readline';
 const args = process.argv.slice(2);
 const claudeId = '11111111-1111-4111-8111-111111111111';
 const record = value => appendFileSync(process.env.LINK_TEST_DELIVERIES, JSON.stringify(value) + '\n');
-if (args[0] === 'agents') {
+if (args[0] === '--model') {
+  const mode = process.env.LINK_TEST_MODE;
+  const conversation = args.includes('--conversation')
+    ? args[args.indexOf('--conversation') + 1]
+    : '44444444-4444-4444-8444-444444444444';
+  let line = '';
+  for await (const chunk of process.stdin) line += chunk;
+  const input = JSON.parse(line);
+  record({ transport: 'antigravity', args, conversation, input, cwd: process.cwd(), phase: 'start' });
+  if (mode === 'antigravity-model-unavailable') {
+    console.log(JSON.stringify({ event: 'result', result: { status: 'ERROR', conversation_id: '' } }));
+    process.exit(1);
+  }
+  console.log(JSON.stringify({ event: 'init', conversation_id: conversation,
+    init: { model: mode === 'antigravity-model-mismatch' ? 'gemini-4-argon-high' : args[1] } }));
+  await new Promise(resolve => setTimeout(resolve, 150));
+  record({ transport: 'antigravity', conversation, phase: 'finish' });
+  const response = args.includes('--conversation') ? 'Remembered COBALT-17' : 'Ready';
+  console.log(JSON.stringify({ event: 'result', result: { conversation_id: conversation, status: 'SUCCESS', response } }));
+} else if (args[0] === 'agents') {
   const session = { sessionId: claudeId, name: 'link-fixture', cwd: '/tmp', status: 'idle' };
   console.log(JSON.stringify(process.env.LINK_TEST_MODE === 'ambiguous' ? [session, { ...session, sessionId: '22222222-2222-4222-8222-222222222222' }] : [session]));
 } else if (args[0] === '-p') {

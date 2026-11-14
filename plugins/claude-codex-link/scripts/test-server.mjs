@@ -190,7 +190,7 @@ async function fakeTests() {
   const manifest = JSON.parse(
     readFileSync(join(pluginRoot, ".codex-plugin", "plugin.json"), "utf8"),
   );
-  assert.equal(manifest.version, "0.4.0");
+  assert.equal(manifest.version, "0.5.0");
   assert.ok(
     manifest.interface.defaultPrompt.some((prompt) =>
       /without repository tools/i.test(prompt),
@@ -211,7 +211,7 @@ async function fakeTests() {
   const listed = await client.request("tools/list");
   assert.deepEqual(
     listed.result.tools.map((tool) => tool.name),
-    ["ask", "ask_followup", "ask_status", "list_jobs", "cancel_ask", "link_sessions", "link_read", "link_send", "link_status", "link_inbox", "link_ack"],
+    ["ask", "ask_followup", "ask_status", "list_jobs", "cancel_ask", "link_open_antigravity", "link_sessions", "link_read", "link_send", "link_status", "link_inbox", "link_ack"],
   );
   assert.match(listed.result.tools[0].description, /no elapsed-time/i);
   assert.match(listed.result.tools[0].description, /full autonomous coding agent/i);

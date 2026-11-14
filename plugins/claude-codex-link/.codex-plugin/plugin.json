@@ -1,7 +1,7 @@
 {
   "name": "claude-codex-link",
-  "version": "0.4.0",
-  "description": "Persistent Claude consultations and addressed messages between Claude Code and Codex sessions.",
+  "version": "0.5.0",
+  "description": "Persistent Claude consultations and addressed messages across Claude Code, Codex, and Gemini 4 Carbon.",
   "author": {
     "name": "max"
   },
@@ -16,9 +16,9 @@
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
-    "displayName": "Claude/Codex Link",
-    "shortDescription": "Consult Claude and connect existing Claude/Codex sessions.",
-    "longDescription": "Persistent Claude consultations and addressed messages between Claude Code and Codex sessions.",
+    "displayName": "Harness Link",
+    "shortDescription": "Talk across Claude Code, Codex, and Gemini 4 Carbon.",
+    "longDescription": "Persistent Claude consultations and addressed messages across Claude Code, Codex, and Gemini 4 Carbon.",
     "developerName": "max",
     "category": "Productivity",
     "capabilities": [
@@ -29,7 +29,7 @@
     "defaultPrompt": [
       "Ask Opus for a quick independent opinion without repository tools.",
       "Ask Claude to investigate and fix this issue, then run the tests.",
-      "Send a message to the selected Claude or Codex session."
+      "Open a shared Gemini 4 Carbon conversation."
     ]
   }
 }

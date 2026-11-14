@@ -46,6 +46,14 @@ lost acknowledgement, delivery is `unknown` and is never automatically retried.
 A recipient acknowledgement is reported by the calling agent, not cryptographic
 proof of its identity or proof that the requested work is complete.
 
+A Link-managed Antigravity conversation has an `antigravity:<UUID>` address.
+Its first send starts the native CLI conversation with `gemini-4-carbon-high`.
+Subsequent sends resume the saved native ID under an exclusive per-conversation
+lock. `link_status` includes Carbon's response and the model verified from the
+CLI initialization event. Codex and Claude Code use the same local registry and
+message records. The conversation is scoped to text discussion in a private
+workspace.
+
 ## Install
 
 The root README contains the host-specific commands. Installing under the new

@@ -1,7 +1,7 @@
-# Claude/Codex Link
+# Harness Link
 
-Connect existing Claude Code and Codex sessions, and run persistent Claude
-consultations. This is the continuation of **Claude Ask**, with its Git history
+Connect Claude Code and Codex sessions, talk to Gemini 4 Carbon in a shared
+Antigravity conversation, and run persistent Claude consultations. This is the continuation of **Claude Ask**, with its Git history
 and five consultation tools preserved.
 
 **Delivery is asymmetric:** Claude receives messages in its live session.
@@ -18,19 +18,19 @@ dependent; an incompatible version returns an error rather than modifying logs.
 In Codex:
 
 ```sh
-codex plugin marketplace add AbsoluteMode/claude-codex-link
+codex plugin marketplace add AbsoluteMode/harness-link
 codex plugin add claude-codex-link@absolutmode
 ```
 
 In Claude Code:
 
 ```sh
-claude plugin marketplace add AbsoluteMode/claude-codex-link
+claude plugin marketplace add AbsoluteMode/harness-link
 claude plugin install codex-claude-link@absolutmode
 ```
 
-Claude reserves third-party plugin IDs starting with `claude-`, so its install
-ID is `codex-claude-link`; the product and repository name remain Claude/Codex Link.
+The existing plugin IDs still work. Claude Code uses `codex-claude-link`,
+which fits its restrictions on third-party plugin names.
 
 Reload plugins or start a new session to discover the new tool schemas. Finish
 old Claude Ask jobs before disabling the old plugin. The renamed plugin keeps
@@ -45,7 +45,8 @@ invoke `node plugins/claude-codex-link/scripts/cli.mjs` directly.
 
 | Tool | Purpose |
 | --- | --- |
-| `link_sessions` | Discover live Claude sessions or saved Codex chats |
+| `link_open_antigravity` | Create a shared Gemini 4 Carbon conversation address |
+| `link_sessions` | Discover Claude sessions, Codex chats, or Link-managed Antigravity conversations |
 | `link_read` | Read persisted text without resuming or starting a session |
 | `link_send` | Start a durable addressed send; returns a message UUID |
 | `link_status` | Inspect transport acceptance and recipient confirmation |
@@ -74,10 +75,31 @@ ID. Failed and unfinished sends are not exposed as inbox mail.
 set to the original message UUID. The recipient calls `link_ack` after reading;
 it must not reply automatically to receipts.
 
+## Gemini 4 Carbon
+
+Install and authenticate the Antigravity CLI (`agy` 1.5.8 tested). Check that
+`agy models` includes `gemini-4-carbon-high`. Harness Link uses this exact
+model for every turn.
+
+1. In Codex or Claude Code, call `link_open_antigravity` with an optional
+   `name`. The first send starts the Antigravity conversation.
+2. Call `link_send` with your actual session address, the returned
+   `antigravity:<UUID>` address, and your message.
+3. Poll `link_status` for `response` and `resolved_model`. Either client
+   can continue the conversation using the same address. Use
+   `link_sessions` with `provider: antigravity` to find it again and
+   `link_read` to read recent turns.
+
+Carbon runs in a private workspace for text discussion. Harness Link owns
+these sessions and serializes their turns. Send another message when you want
+another response. An interrupted conversation with an unknown delivery outcome
+requires a new Link conversation. Native Antigravity Desktop conversations
+are outside this transport.
+
 ## Receipts and limits
 
 - `pending` / `sending`: detached delivery is in progress.
-- `accepted`: Claude's inbox accepted the message; reading is unconfirmed.
+- `accepted`: Claude's inbox accepted the message, or Carbon returned a response. Claude reading remains unconfirmed.
 - `queued`: Codex persisted the message; execution and reading are unconfirmed.
 - `acknowledged`: the addressed recipient reported reading it; work may remain.
 - `failed`: a known pre-delivery rejection.
@@ -118,6 +140,7 @@ and 24-hour completed-job retention.
 - `CLAUDE_CODEX_LINK_DIR`: message/receipt directory.
 - `CLAUDE_CODEX_LINK_CLAUDE_CLI`: Claude executable override.
 - `CLAUDE_CODEX_LINK_CODEX_CLI`: Codex executable override.
+- `CLAUDE_CODEX_LINK_AGY_CLI`: Antigravity executable override.
 - Existing `CLAUDE_ASK_*` settings continue to configure consultations.
 
 The Claude courier runs Opus 5.5 with only SendMessage, safe mode, and no MCP

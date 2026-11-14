@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, statSync, existsSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, statSync, existsSync, realpathSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -11,6 +11,7 @@ process.env.CLAUDE_ASK_JOB_DIR = join(root, 'jobs');
 process.env.LINK_TEST_DELIVERIES = join(root, 'deliveries.jsonl');
 process.env.CLAUDE_CODEX_LINK_CLAUDE_CLI = fileURLToPath(new URL('./fixtures/fake-link-cli.mjs', import.meta.url));
 process.env.CLAUDE_CODEX_LINK_CODEX_CLI = process.env.CLAUDE_CODEX_LINK_CLAUDE_CLI;
+process.env.CLAUDE_CODEX_LINK_AGY_CLI = process.env.CLAUDE_CODEX_LINK_CLAUDE_CLI;
 const { startMessage, messageStatus, acknowledge, inbox, handleLink } = await import('./link.mjs');
 const { listSessions, address, run } = await import('./transports.mjs');
 const { RpcClient } = await import('./rpc.mjs');
@@ -144,4 +145,53 @@ test('missing executables are confirmed pre-delivery failures', async () => {
     process.env.CLAUDE_CODEX_LINK_CODEX_CLI = originalCodex;
   }
 });
+test('Claude and Codex share one Carbon conversation across detached runners', async () => {
+  const other = await handleLink('link_open_antigravity', {});
+  const session = await handleLink('link_open_antigravity', { name: 'Shared Carbon' });
+  const list = args => handleLink('link_sessions', { provider: 'antigravity', ...args });
+  const page = await list({ limit: 1 });
+  const next = await list({ cursor: page.next_cursor });
+  assert.deepEqual(new Set([...page.sessions, ...next.sessions].map(s => s.address)),
+    new Set([session.address, other.address]));
+  const start = deliveries().length;
+  const payload = { from: codex, to: session.address, message_id: randomUUID(), text: 'Remember COBALT-17' };
+  const first = startMessage(payload);
+  assert.equal(startMessage(payload).duplicate, true);
+  const reply = await settle(first.message_id);
+  assert.equal(reply.response, 'Ready');
+  assert.equal(reply.resolved_model, 'gemini-4-carbon-high');
+  const followups = [claude, codex].map(from => startMessage({ from, to: session.address, text: 'What was the code?' }));
+  const responses = await Promise.all(followups.map(item => settle(item.message_id)));
+  assert.ok(responses.every(r => r.response === 'Remembered COBALT-17' && r.transport_id === reply.transport_id));
+  const turns = deliveries().slice(start);
+  assert.deepEqual(turns.map(r => r.phase), ['start', 'finish', 'start', 'finish', 'start', 'finish']);
+  const begins = turns.filter(r => r.phase === 'start');
+  assert.equal(begins[0].cwd, realpathSync(join(root, 'antigravity', session.address.split(':')[1], 'workspace')));
+  assert.ok(begins[0].input.message.content.includes(payload.text));
+  assert.ok(begins.every(r => !r.args.join(' ').includes(payload.text) && r.args.includes('--sandbox')));
+  const history = await handleLink('link_read', { session: session.address });
+  assert.equal(history.messages.length, 3);
+  assert.ok(history.messages.some(m => m.from === claude && m.response === 'Remembered COBALT-17'));
+});
+
+test('Carbon rejects a silent model substitution and blocks replay of uncertain turns', async () => {
+  const session = await handleLink('link_open_antigravity', {});
+  const send = () => startMessage({ from: codex, to: session.address, text: 'Hello' });
+  try {
+    process.env.LINK_TEST_MODE = 'antigravity-model-unavailable';
+    assert.equal((await settle(send().message_id)).status, 'failed');
+    process.env.LINK_TEST_MODE = 'antigravity-model-mismatch';
+    const first = await settle(send().message_id);
+    assert.equal(first.status, 'unknown');
+    assert.equal(first.response, undefined);
+  } finally {
+    delete process.env.LINK_TEST_MODE;
+  }
+  const before = deliveries().length;
+  const next = await settle(send().message_id);
+  assert.equal(next.status, 'failed');
+  assert.match(next.error, /earlier Antigravity turn/);
+  assert.equal(deliveries().length, before);
+});
+
 test.after(() => rmSync(root, { recursive: true, force: true }));
