@@ -45,7 +45,7 @@ export async function withCodex(callback) {
   const client = new RpcClient(process.env.CLAUDE_CODEX_LINK_CODEX_CLI || 'codex', ['app-server', '--listen', 'stdio://']);
   try {
     try {
-      await client.request('initialize', { clientInfo: { name: 'claude_codex_link', version: '0.5.0' }, capabilities: { experimentalApi: true } });
+      await client.request('initialize', { clientInfo: { name: 'claude_codex_link', version: '0.6.0' }, capabilities: { experimentalApi: true } });
       client.notify('initialized');
     } catch (e) { e.notSent = true; throw e; }
     return await callback(client);

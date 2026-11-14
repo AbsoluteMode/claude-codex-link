@@ -194,4 +194,46 @@ test('Carbon rejects a silent model substitution and blocks replay of uncertain 
   assert.equal(deliveries().length, before);
 });
 
+test('three participants share room history and can reply across MCP clients', async () => {
+  const server = fileURLToPath(new URL('./server.mjs', import.meta.url));
+  const roles = ['codex', 'claude', 'antigravity'];
+  const clients = roles.map(role => new RpcClient(process.execPath, [server], {
+    env: { ...process.env, HARNESS_LINK_ROOM_ROLE: role },
+  }));
+  async function call(client, name, args) {
+    const result = await client.request('tools/call', { name, arguments: args });
+    assert.equal(result.isError, false, JSON.stringify(result.structuredContent));
+    return result.structuredContent;
+  }
+  try {
+    await Promise.all(clients.map(client => client.request('initialize', { protocolVersion: '2025-03-26' })));
+    const room = await call(clients[0], 'link_open_room', { name: 'Three-way test' });
+    const { rooms } = await call(clients[2], 'link_rooms', {});
+    assert.ok(rooms.some(item => item.id === room.id));
+    const first = { room_id: room.id, text: 'Codex asks', message_id: randomUUID() };
+    const attempts = await Promise.all([
+      call(clients[0], 'link_room_post', first),
+      call(clients[0], 'link_room_post', first),
+    ]);
+    assert.equal(attempts.filter(item => item.duplicate).length, 1);
+    const reply = await call(clients[1], 'link_room_post',
+      { room_id: room.id, text: 'Claude answers', in_reply_to: first.message_id });
+    const followup = await call(clients[2], 'link_room_post',
+      { room_id: room.id, text: 'Carbon answers Claude', in_reply_to: reply.id });
+    const page = await call(clients[0], 'link_room_read', { room_id: room.id, limit: 2 });
+    assert.deepEqual(page.messages.map(item => item.from), roles.slice(1));
+    assert.equal(page.messages.at(-1).id, followup.id);
+    const older = await call(clients[2], 'link_room_read', { room_id: room.id, before: page.next_before });
+    assert.deepEqual(older.messages.map(item => item.id), [first.message_id]);
+    assert.equal(statSync(join(root, 'rooms', room.id, 'messages', `${followup.id}.json`)).mode & 0o777, 0o600);
+    for (const invalid of [{ from: 'codex' }, { in_reply_to: randomUUID() }, { room_id: '../../etc' }]) {
+      const rejected = await clients[2].request('tools/call', { name: 'link_room_post',
+        arguments: { room_id: room.id, text: 'Invalid', ...invalid } });
+      assert.equal(rejected.isError, true);
+    }
+  } finally {
+    for (const client of clients) client.close();
+  }
+});
+
 test.after(() => rmSync(root, { recursive: true, force: true }));

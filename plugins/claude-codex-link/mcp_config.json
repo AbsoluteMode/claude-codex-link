@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "rooms": {
+      "command": "node",
+      "args": ["${PLUGIN_ROOT}/scripts/server.mjs"],
+      "env": { "HARNESS_LINK_ROOM_ROLE": "antigravity" },
+      "enabledTools": ["link_open_room", "link_rooms", "link_room_read", "link_room_post"]
+    }
+  }
+}
