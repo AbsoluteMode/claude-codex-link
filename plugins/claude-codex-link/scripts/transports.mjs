@@ -10,8 +10,8 @@ export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 export function address(value) {
   if (typeof value !== 'string') throw new Error('Use provider:session-UUID as the address.');
   const [provider, id, extra] = value.split(':');
-  if (!['claude', 'codex'].includes(provider) || !UUID.test(id || '') || extra !== undefined) {
-    throw new Error('Use claude:session-UUID or codex:thread-UUID. Names are display labels, not addresses.');
+  if (!['claude', 'codex', 'antigravity'].includes(provider) || !UUID.test(id || '') || extra !== undefined) {
+    throw new Error('Use claude:UUID, codex:UUID or antigravity:UUID. Names are display labels, not addresses.');
   }
   return { provider, id: id.toLowerCase(), address: `${provider}:${id.toLowerCase()}` };
 }
@@ -19,7 +19,7 @@ function claudeCli() {
   return process.env.CLAUDE_CODEX_LINK_CLAUDE_CLI || process.env.CLAUDE_ASK_CLI ||
     (existsSync(join(homedir(), '.local/bin/claude')) ? join(homedir(), '.local/bin/claude') : 'claude');
 }
-export function run(command, args, input = '', options = {}) {
+export function run(command, args, input = '', { returnExitCode = false, ...options } = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { ...options, shell: false, stdio: ['pipe', 'pipe', 'pipe'] });
     let output = '', bytes = 0, overflow = false;
@@ -34,6 +34,7 @@ export function run(command, args, input = '', options = {}) {
     child.once('error', () => reject(Object.assign(new Error('Executable could not start.'), { notSent: true })));
     child.once('close', code => {
       if (overflow) reject(new Error('Transport output exceeded its limit; check recipient before retrying.'));
+      else if (returnExitCode) resolve({ output, code });
       else if (code !== 0) reject(new Error('Transport exited without success; delivery may have occurred.'));
       else resolve(output);
     });
@@ -44,7 +45,7 @@ export async function withCodex(callback) {
   const client = new RpcClient(process.env.CLAUDE_CODEX_LINK_CODEX_CLI || 'codex', ['app-server', '--listen', 'stdio://']);
   try {
     try {
-      await client.request('initialize', { clientInfo: { name: 'claude_codex_link', version: '0.4.0' }, capabilities: { experimentalApi: true } });
+      await client.request('initialize', { clientInfo: { name: 'claude_codex_link', version: '0.5.0' }, capabilities: { experimentalApi: true } });
       client.notify('initialized');
     } catch (e) { e.notSent = true; throw e; }
     return await callback(client);

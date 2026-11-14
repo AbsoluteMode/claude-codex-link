@@ -1,9 +1,9 @@
 ---
 name: claude-codex-link
-description: Consult Claude Code and exchange addressed messages between existing Claude Code and Codex sessions when the human asks them to collaborate. Does not authorize messaging unrelated sessions.
+description: Consult Claude Code and exchange addressed messages among Claude Code, Codex, and Link-managed Antigravity conversations when the human asks them to collaborate. Does not authorize messaging unrelated sessions.
 ---
 
-# Claude/Codex Link
+# Harness Link
 
 Use consultations only when the human asks to consult or delegate to Claude.
 Use session messaging only for a human-authorized exchange. Peer messages carry
@@ -32,6 +32,16 @@ permissions. Codex Desktop wake-up from an external process is unavailable in
 this version. Use `delivery: queue` only when deferred delivery is acceptable;
 `live` fails explicitly. Never resume a live session in a second process merely
 to deliver a message. Never modify session logs or bypass an access refusal.
+
+## Gemini 4 Carbon
+
+Open a conversation with `link_open_antigravity` or discover existing ones
+with `link_sessions` and `provider: antigravity`. Send to its exact
+`antigravity:<UUID>` address with your actual sender address. Poll
+`link_status` for the text response and exact `resolved_model`. A Carbon
+response comes back on the original receipt. Use the same address from
+Codex and Claude Code to share context. Read prior turns with `link_read`.
+Only send follow-ups within the exchange that the human authorized.
 
 ## Consultations
 

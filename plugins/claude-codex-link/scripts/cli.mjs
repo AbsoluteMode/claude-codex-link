@@ -3,10 +3,10 @@ import { readFileSync } from 'node:fs';
 import { handleLink } from './link.mjs';
 
 const [command, ...rest] = process.argv.slice(2);
-const names = { sessions: 'link_sessions', read: 'link_read', send: 'link_send', status: 'link_status', inbox: 'link_inbox', ack: 'link_ack' };
+const names = { 'open-antigravity': 'link_open_antigravity', sessions: 'link_sessions', read: 'link_read', send: 'link_send', status: 'link_status', inbox: 'link_inbox', ack: 'link_ack' };
 try {
   if (!names[command]) {
-    console.log('Claude/Codex Link\nCommands: sessions, read, send, status, inbox, ack\nOptions map to MCP fields: --provider claude|codex, --session provider:UUID, --to, --from, --reply-to, --message-id, --recipient, --delivery queue|live.\nSend body via --stdin or --text-file PATH (never argv). Example: printf hello | claude-codex-link send --from codex:UUID --to claude:UUID --stdin');
+    console.log('Harness Link\nCommands: open-antigravity, sessions, read, send, status, inbox, ack\nOptions map to MCP fields: --provider claude|codex|antigravity, --session provider:UUID, --to, --from, --reply-to, --message-id, --recipient, --delivery queue|live.\nSend body via --stdin or --text-file PATH (never argv). Example: printf hello | claude-codex-link send --from codex:UUID --to claude:UUID --stdin');
     process.exit(command ? 1 : 0);
   }
   const args = {};

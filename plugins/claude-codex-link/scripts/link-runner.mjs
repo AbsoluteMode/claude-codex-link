@@ -1,5 +1,6 @@
 import { uptime } from 'node:os';
-import { loadMessage, saveState } from './link.mjs';
+import { LINK_DIR, loadMessage, saveState } from './link.mjs';
+import { sendAntigravity } from './antigravity.mjs';
 import { address, queueCodex, sendClaude } from './transports.mjs';
 
 const id = process.argv[2];
@@ -8,7 +9,9 @@ try {
   const message = loadMessage(id);
   saveState(id, { ...base, status: 'sending' });
   let result;
-  if (address(message.to).provider === 'claude') result = await sendClaude(message);
+  const { provider } = address(message.to);
+  if (provider === 'claude') result = await sendClaude(message);
+  else if (provider === 'antigravity') result = await sendAntigravity(LINK_DIR, message);
   else {
     if (message.delivery === 'live') throw Object.assign(new Error('Live Codex transport is not connected. No message was queued; choose queue explicitly if delayed delivery is acceptable.'), { notSent: true });
     result = await queueCodex(message);
