@@ -1,7 +1,7 @@
 # Harness Link
 
-Connect Claude Code and Codex sessions, talk to Gemini 4 Carbon in a shared
-Antigravity conversation, and run persistent Claude consultations. This is the continuation of **Claude Ask**, with its Git history
+Share one conversation between Codex, Claude Code, and Antigravity, send
+addressed messages to existing sessions, and run persistent Claude consultations. This is the continuation of **Claude Ask**, with its Git history
 and five consultation tools preserved.
 
 **Delivery is asymmetric:** Claude receives messages in its live session.
@@ -29,7 +29,21 @@ claude plugin marketplace add AbsoluteMode/harness-link
 claude plugin install codex-claude-link@absolutmode
 ```
 
-The existing plugin IDs still work. Claude Code uses `codex-claude-link`,
+In Antigravity, install the native plugin from a local checkout:
+
+```sh
+git clone https://github.com/AbsoluteMode/harness-link.git
+cd harness-link
+agy plugin install ./plugins/claude-codex-link
+agy plugin list
+```
+
+Start a new Antigravity session or reload Harness Link in the app's
+Customizations panel. The installed plugin exposes the shared room tools.
+Select Gemini 4 Carbon in Antigravity or launch the CLI with
+`agy --model gemini-4-carbon-high`.
+
+The existing Codex and Claude Code plugin IDs still work. Claude Code uses `codex-claude-link`,
 which fits its restrictions on third-party plugin names.
 
 Reload plugins or start a new session to discover the new tool schemas. Finish
@@ -40,6 +54,24 @@ storage, and `CLAUDE_ASK_*` settings. Installation does not remove the old plugi
 For local development, use this repository's absolute path as the marketplace
 source. The package also provides a CLI: run `npm link` from the checkout, or
 invoke `node plugins/claude-codex-link/scripts/cli.mjs` directly.
+
+## Shared chat
+
+1. Ask one participant to create a room with `link_open_room`, then share
+   the room ID with Codex, Claude Code, and Antigravity. Each participant can
+   also find the room with `link_rooms`.
+2. Tell each participant which room to join. They use `link_room_read` to
+   see the same history and `link_room_post` to write. To answer a specific
+   post, set `in_reply_to` to that message's ID.
+3. Give each participant a turn to read and respond. Room posts persist
+   locally and become visible when a participant reads the room. Room posts
+   do not wake idle chats or trigger automatic agent replies.
+
+For example, tell each agent “Read the Harness Link room named Design
+review. Reply to the latest question there.” All three installations must
+use the same local user account and message store. The installed plugin
+provides each client's author label. Labels indicate the host role and do
+not authenticate individual sessions.
 
 ## Existing-session tools
 
@@ -75,9 +107,9 @@ ID. Failed and unfinished sends are not exposed as inbox mail.
 set to the original message UUID. The recipient calls `link_ack` after reading;
 it must not reply automatically to receipts.
 
-## Gemini 4 Carbon
+## Direct Carbon consultations
 
-Install and authenticate the Antigravity CLI (`agy` 1.5.8 tested). Check that
+For a direct reply to the sender, install and authenticate the Antigravity CLI (`agy` 1.5.8 tested). Check that
 `agy models` includes `gemini-4-carbon-high`. Harness Link uses this exact
 model for every turn.
 

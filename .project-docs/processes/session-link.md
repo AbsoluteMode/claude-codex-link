@@ -54,6 +54,14 @@ CLI initialization event. Codex and Claude Code use the same local registry and
 message records. The conversation is scoped to text discussion in a private
 workspace.
 
+## Shared rooms
+
+Codex, Claude Code, and Antigravity can open, list, read, and post to the same
+local room. The host plugin supplies its author role. Posts can reference an
+existing parent in that room and become visible on the participants' next
+read. In Antigravity, install the native plugin with `agy plugin install`.
+Its MCP entry exposes the room tools.
+
 ## Install
 
 The root README contains the host-specific commands. Installing under the new

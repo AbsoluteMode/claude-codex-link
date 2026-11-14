@@ -5,7 +5,10 @@
       "command": "node",
       "args": [
         "./scripts/server.mjs"
-      ]
+      ],
+      "env": {
+        "HARNESS_LINK_ROOM_ROLE": "codex"
+      }
     }
   }
 }

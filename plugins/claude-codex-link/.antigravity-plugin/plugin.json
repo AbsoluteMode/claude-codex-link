@@ -1,0 +1,9 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "harness-link",
+  "displayName": "Harness Link",
+  "version": "0.6.0",
+  "description": "Share one conversation between Antigravity, Claude Code, and Codex.",
+  "author": { "name": "max" },
+  "suggestedPrompts": ["Read the latest messages in a Harness Link room."]
+}
